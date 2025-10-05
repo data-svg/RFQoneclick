@@ -5,8 +5,11 @@ export default async function RFQDetail({ params }: { params: { id: string } }) 
   const { data: rfq } = await supabase.from("rfqs").select("id,title,description,services,due_at,event_id,status").eq("id", params.id).single();
   if (!rfq) return <div className="card">RFQ not found.</div>;
   const { data: evt } = await supabase.from("events").select("name,event_date,expected_attendance,region").eq("id", rfq.event_id).single();
-  const { data: invites = [] } = await supabase.from("rfq_invites").select("invite_email,token").eq("rfq_id", params.id);
-  const { data: quotes = [] } = await supabase.from("quotes").select("supplier_email,company,price,currency,notes").eq("rfq_id", params.id);
+  const { data: invites } = await supabase.from("rfq_invites").select("invite_email,token").eq("rfq_id", params.id);
+  const { data: quotes } = await supabase.from("quotes").select("supplier_email,company,price,currency,notes").eq("rfq_id", params.id);
+
+  const invitesList = invites || [];
+  const quotesList = quotes || [];
 
   return (
     <div className="space-y-4">
@@ -22,10 +25,10 @@ export default async function RFQDetail({ params }: { params: { id: string } }) 
         <h3 className="mt-4 font-semibold">Services</h3><div>{(rfq as any).services?.map?.((s:string)=>(<span key={s} className="badge mr-1">{s}</span>))}</div>
 
         <h3 className="mt-4 font-semibold">Invites</h3>
-        {!invites.length && <div className="text-sm text-slate-600">No invites yet.</div>}
-        {!!invites.length && (
+        {!invitesList.length && <div className="text-sm text-slate-600">No invites yet.</div>}
+        {!!invitesList.length && (
           <div className="mt-1 space-y-1 text-sm">
-            {invites.map(i => (
+            {invitesList.map(i => (
               <div key={i.token} className="flex items-center gap-2">
                 <span className="badge">{i.invite_email}</span>
                 <span className="text-slate-500">Token: {i.token}</span>
@@ -35,10 +38,10 @@ export default async function RFQDetail({ params }: { params: { id: string } }) 
         )}
 
         <h3 className="mt-4 font-semibold">Quotes</h3>
-        {!quotes.length && <div className="text-sm text-slate-600">No quotes yet.</div>}
-        {!!quotes.length && (
+        {!quotesList.length && <div className="text-sm text-slate-600">No quotes yet.</div>}
+        {!!quotesList.length && (
           <div className="mt-1 space-y-1 text-sm">
-            {quotes.map((q, idx) => (
+            {quotesList.map((q, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 <span className="badge">{q.supplier_email}</span>
                 <span className="badge">{q.company||"—"}</span>
